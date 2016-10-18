@@ -1,0 +1,15 @@
+/*
+Theme Name: My Theme 
+Author: Henry
+Description: Wodpress themes and build it from scratch
+*/
+.pictures {
+    border: 10px solid #ffffff;
+    border-radius: 50%;
+    display: block;
+    margin-left: 1%;
+    margin-right: auto;
+    margin-bottom: 0.5em;
+    width:200px;
+    height:200px;
+}
