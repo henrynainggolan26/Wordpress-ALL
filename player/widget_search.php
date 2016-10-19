@@ -9,14 +9,12 @@ class Widget_Search extends WP_Widget
 		parent::__construct( 'Widget_Search', 'Search Widget', $widget_ops );
 	}
 	public function widget($args, $instance){ 
-		?>
-		<form action="" method="get">
-			<div id="container">
-				<input type="text" name="search_name" id="search"  placeholder="Search Here"/>
-				<input type="submit" name="submit_name" id="submit" value="Search" />
-			</div>
-		</form>	
-		<?php
+		echo '<form action="" method="get">';
+		echo '<div id="container">';
+		echo '<input type="text" name="search_name" id="search"  placeholder="Search Here"/>';
+		echo '<input type="submit" name="submit_name" id="submit" value="Search" />';
+		echo '</div>';
+		echo '</form>';	
 	}
 	public function form($instance)
 	{

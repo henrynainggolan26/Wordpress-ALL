@@ -15,18 +15,16 @@ class Widget_Top_Score extends WP_Widget
 		}
 		global $blog_id; 
 		global $wpdb;
-		$result = $wpdb->get_results( 
-			"SELECT * FROM players WHERE blog_id = $blog_id ORDER BY goal DESC LIMIT 1" 
-			);
+		$result = $wpdb->get_results( "SELECT * FROM players WHERE blog_id = $blog_id ORDER BY goal DESC LIMIT 1" );
 		if(count($result)>0){
 			echo "<table border='2' width='200px' height='70px' cellpadding='5' align='center'>"; 
 			echo "<tr><th> Name </th><th> Position </th><th> Age </th> <th> Goal </th></tr>";
 			foreach ( $result as $player ) 
 			{
-				echo '</tr><td>'.$player->name.'</td>';
+				echo '<td><a href="http://localhost/wordpress-all/barcelona-fc/top-score/">'.$player->name.'</a></td>';
 				echo '<td>'.$player->position.'</td>';
 				echo '<td>'.floor(((strtotime(get_the_date('Y-m-d'))-strtotime($player->birthday))/86400)/365).'</td>';
-				echo '<td>'.$player->goal.'</td></tr>';
+				echo '<td>'.$player->goal.'</td>';
 			}
 			echo'</table>';
 			echo '<br />';

@@ -8,24 +8,23 @@ Author: Henry
 include 'widget_top_score.php';
 include 'widget_assist.php';
 include 'widget_search.php';
-
+global $player_id;
 add_action( 'admin_menu', 'my_admin_menu' );
 function my_admin_menu() {
-	add_menu_page( 'Player', 'Player', 'manage_options', 'admin_player/admin_player_page.php', 'player_admin_page', 'dashicons-tickets', 6  );
+	add_menu_page( 'Player', 'Player', 'manage_options', 'admin_player/admin_player_page.php', 'player_admin_page', 'dashicons-tickets', 6 );
 }
-
 function player_session(){
 		include_once 'start_session.php';
 }
 add_action('init', 'player_session');
-
 function show_player(){
-	echo "<h2>Show Player</h2>";
 	global $blog_id;
 	global $wpdb;
-	$result = $wpdb->get_results("SELECT * FROM players WHERE blog_id = $blog_id"); 
+	$result = $wpdb->get_results("SELECT * FROM players WHERE blog_id = $blog_id");
+	echo "<h2><center>Show Player</center></h2>"; 
 	echo "<table border='1' cellpadding='3' align='center'>"; 
-	echo "<tr><th> ID </th> <th> Name </th>  <th> Address </th> <th> Position </th><th> Birthday </th><th> Goal </th><th> Assist </th><th> In/Out </th><th> Action </th></tr>";
+	echo "<tr><th>ID</th> <th>Name</th> <th>Address</th> <th>Position</th> <th>Birthday</th> <th>Goal</th>
+		<th>Assist</th> <th>In/Out</th> <th>Status</th> <th>Action</th></tr>";
 	foreach ($result as $key) {
 		echo '<tr><td>'.$key->id.'</td>';
 		echo '<td>'.$key->name.'</td>';
@@ -35,6 +34,7 @@ function show_player(){
 		echo '<td>'.$key->goal.'</td>';
 		echo '<td>'.$key->assist.'</td>';
 		echo '<td>'.$key->in_out.'</td>';
+		echo '<td>' .$key->status.'</td>';
 		echo '<td><form action="" method="post"> <input type=hidden name="id_player" value="'.$key->id.'">
 		<input type="submit" name="edit" value="Edit"> <input type="submit" name="delete" value="Delete"></form> </td></tr>';
 	}
@@ -47,7 +47,6 @@ function delete_player(){
 		$wpdb->delete('players', array('id'=>$id, 'blog_id' => $blog_id));
 	}
 }
-
 function edit_player(){
 	global $wpdb;
 	if(isset($_POST['edit'])){
@@ -59,17 +58,54 @@ function edit_player(){
 		$birthday = $player->birthday;
 		$goal = $player->goal;
 		$assist = $player->assist;
-		$in_out = $player->in_out; 
+		$in_out = $player->in_out;
+		$status = $player->status;
+		$arrayPosition = array('GK'=>'GK','CB'=>'CB','LB'=>'LB','RB'=>'RB','DMF'=>'DMF','AMF'=>'AMF','LMF'=>'LMF','RMF'=>'RMF','CF'=>'CF');
+		$arrayStatus = array('Pending'=>'Pending', 'Accepted'=>'Accepted','Rejected'=>'Rejected'); 
+		$arrayInOut = array('in'=>'In', 'out'=>'Out'); 
 		echo '<h2>Edit Players</h2>';
 		echo '<form id="edit_player" action="#" method="post">';
-		echo 'Name: <input type="text" name="player-name" pattern="[a-zA-Z0-9 ]+" value="'.$name.'"> <br /><br />';
-		echo 'Address: <input type="text" name="player-address" pattern="[a-zA-Z0-9 ]+" value="'.$address.'"> <br /><br />';
-		echo 'Position: <input type="text" name="player-position" pattern="[a-zA-Z0-9 ]+" value="'.$position.'"> <br /><br />';
-		echo 'Birthday <input type="date" id="player-birthday" name="player-birthday" value="'.$birthday.'"><br /><br />';
-		echo 'Goal: <input type="text" name="player-goal" pattern="[0-9]+" value="'.$goal.'"><br /><br />';
-		echo 'Assist: <input type="text" name="player-assist" pattern="[0-9]+" value="'.$assist.'"><br /><br />';
-		echo 'Gender: <input type="radio" name="player-inout" value="in" '.$in_out.' == "in" ? checked="checked" : ""; > in <input type="radio" name="player-inout" value="out" '.$in_out.' == "out" ? checked="checked" : ""; > out <br /><br />';
-		echo '<input type="submit" name="player-save" value="Send">';
+		echo 'Name (required) </br>';
+		echo '<input type="text" name="player-name" pattern="[a-zA-Z0-9 ]+" value="'.$name.'"> <br /><br />';
+		echo 'Address (required) </br>';
+		echo '<textarea type="text" name="player-address" style="min-width: 68%" pattern="[a-zA-Z0-9 ]+" rows="4" required/>'.$address.'</textarea><br /><br />';
+		echo 'Select Position (required) </br>';
+		echo' <select id="player-position" name="player-position">';  
+		foreach($arrayPosition as $valPosition=>$wordPosition){ 
+			if($position == $wordPosition){
+				echo'<option value="'.$valPosition.'" selected="selected">'.$wordPosition.'</option>'; 	
+			}
+    		echo'<option value="'.$valPosition.'">'.$wordPosition.'</option>'; 
+		} 
+		echo'</select>';
+		echo '<br /><br />';
+		echo 'Birthday (required) </br>'; 
+		echo '<input type="date" id="player-birthday" name="player-birthday" value="'.$birthday.'"><br /><br />';
+		echo 'Goal (required) </br>'; 
+		echo '<input type="text" name="player-goal" pattern="[0-9]+" value="'.$goal.'"><br /><br />';
+		echo 'Assist (required) </br>'; 
+		echo '<input type="text" name="player-assist" pattern="[0-9]+" value="'.$assist.'"><br /><br />';
+		echo 'In /Out (required) </br>'; 
+		echo' <select id="player-inout" name="player-inout">';  
+		foreach($arrayInOut as $valInOut=>$wordInOut){ 
+			if($in_out == $valInOut){
+				echo'<option value="'.$valInOut.'" selected="selected">'.$wordInOut.'</option>'; 	
+			}
+    		echo'<option value="'.$valInOut.'">'.$wordInOut.'</option>'; 
+		} 
+		echo'</select>';
+		echo '<br /><br />';
+		echo 'Select Status (required) </br>'; 
+		echo' <select id="player-status" name="player-status">';  
+		foreach($arrayStatus as $valStatus=>$wordStatus){ 
+			if($status == $wordStatus){
+				echo'<option value="'.$valStatus.'" selected="selected">'.$wordStatus.'</option>'; 	
+			}
+    		echo'<option value="'.$valStatus.'">'.$wordStatus.'</option>'; 
+		} 
+		echo'</select>';
+		echo '<br /><br />';
+		echo '<input type="submit" name="player-save" value="Save">';
 		echo '<input type=hidden name="id_player_hidden" value="'.$id.'">';
 		echo '</form>';
 		}
@@ -82,6 +118,7 @@ function edit_player(){
 		$goal = sanitize_text_field($_POST["player-goal"]);
 		$assist = sanitize_text_field($_POST["player-assist"]);
 		$inout = sanitize_text_field($_POST["player-inout"]);
+		$status = sanitize_text_field($_POST["player-status"]);
 		$wpdb->update(
 			'players',
 			array(
@@ -92,6 +129,7 @@ function edit_player(){
 				'goal' => $goal,
 				'assist' => $assist,
 				'in_out' => $inout,
+				'status' => $status,
 				),
 			array('id' => $id),
 			array(
@@ -101,6 +139,7 @@ function edit_player(){
 				'%s',
 				'%d',
 				'%d',
+				'%s',
 				'%s',
 				),
 			array('%d')
@@ -121,10 +160,17 @@ function form_input_player() {
 	echo 'Address (required) <br/>';
 	echo '<textarea type="text" name="player-address" style="min-width: 68%" pattern="[a-zA-Z0-9 ]+" value="' . ( isset( $_POST["player-address"] ) ? esc_attr( $_POST["player-address"] ) : '' ) . '" rows="4" required/></textarea>' ;
 	echo '</p>';
-	echo '<p>';
-	echo 'Position (required) <br/>';
-	echo '<input type="text" name="player-position" pattern="[a-zA-Z0-9 ]+" value="' . ( isset( $_POST["player-position"] ) ? esc_attr( $_POST["player-position"] ) : '' ) . '" size="40" required/>';
-	echo '</p>';
+	echo 'Select Position : <select id="player-position" name="player-position" value="'.$position.'">';                      
+	echo '<option value="GK">GK</option>';
+	echo '<option value="CB">CB</option>';
+	echo '<option value="LB">LB</option>';
+	echo '<option value="RB">RB</option>';
+	echo '<option value="DMF">DMF</option>';
+	echo '<option value="AMF">AMF</option>';
+	echo '<option value="LMF">LMF</option>';
+	echo '<option value="RMF">RMF</option>';
+	echo '<option value="CF">CF</option>';
+	echo '</select><br /><br />';
 	echo '<p>';
 	echo 'Birthday (required) <br/>';
 	echo '<input type="date" id="player-birthday" name="player-birthday" required/>';
@@ -165,7 +211,7 @@ function insert_player(){
 		if ( is_wp_error( $attachment_id ) ) {
 			echo "There was an error uploading the image."; } 
 		else {
-			echo "The image was uploaded successfully!"; }
+			echo "Data Success Save! Please cek your email"; }
 		}
 		$wpdb->insert(
 			'players',
@@ -182,6 +228,7 @@ function insert_player(){
 				'assist' => 0,
 				'in_out' => 'out',
 				'image' => $attachment_id,
+				'status' => 'Pending',
 				),
 			array(
 				'%s',
@@ -192,6 +239,7 @@ function insert_player(){
 				'%s',
 				'%s',
 				'%d',
+				'%s',
 				'%s',
 				)
 			); ;
@@ -289,7 +337,7 @@ function show_player_all(){
 	echo "<tr><th> No </th> <th> Name </th>  <th> Address </th> <th> Position </th><th> Age </th><th> Goal </th><th> Assist </th></tr>";
 	foreach ($result as $key) {
 		echo '<tr><td>'.$no.'</td>';
-		echo '<td>'.$key->name.'</td>';
+		echo '<td>'.$key->name.'</a></td>';
 		echo '<td>'.$key->address.'</td>';
 		echo '<td>'.$key->position.'</td>';
 		echo '<td>'.floor(((strtotime(get_the_date('Y-m-d'))-strtotime($key->birthday))/86400)/365).'</td>';
@@ -307,9 +355,9 @@ function show_player_in(){
 	$result = $wpdb->get_results("SELECT * FROM players WHERE blog_id = $blog_id AND in_out = 'in'"); 
 	echo "<table border='1' cellpadding='5' width='100%' height='50%' align='center'>"; 
 	echo "<tr><th> No </th> <th> Name </th>  <th> Address </th> <th> Position </th><th> Age </th><th> Goal </th><th>Assist</th></tr>";
-	foreach ($result as $key) {
+	foreach ($result as $key) { 
 		echo '<tr><td>'.$no.'</td>';
-		echo '<td>'.$key->name.'</td>';
+		echo '<td>'.$key->name.'</a></td>';
 		echo '<td>'.$key->address.'</td>';
 		echo '<td>'.$key->position.'</td>';
 		echo '<td>'.floor(((strtotime(get_the_date('Y-m-d'))-strtotime($key->birthday))/86400)/365).'</td>';
@@ -326,7 +374,6 @@ function cek_login($username, $password){
 	$result = $wpdb->get_results("SELECT username,password FROM players WHERE username = '".$username."' AND password = '".$password."'");
 	return $result;
 }
-
 function get_id_player($username, $password){
 	global $wpdb;
 	$temp_id = $wpdb->get_var("SELECT id FROM players WHERE username = '".$username."' AND password = '".$password."'");
@@ -349,11 +396,8 @@ function login_player(){
 			$_SESSION['password'] = $password;
 			$_SESSION['id'] = $id;			
 			$_SESSION['userLoggedIn'] = true;
-			?>
-			<script>
-				window.location.href = '/wordpress-all/barcelona-fc/home/';
-			</script>			
-			<?php
+			wp_redirect('/wordpress-all/barcelona-fc/home/');
+			exit();
 		}
 	}
 	echo '<form action="" method="post">';
@@ -376,25 +420,17 @@ function login_player(){
 	return $items;
 }
 add_shortcode( 'shortcode_login_player', 'login_player' );
-
 function logout(){
-	?>
-	<script>
-		window.location.href = '/wordpress-all/barcelona-fc/home/';
-	</script>
-	<?php
+	wp_redirect('/wordpress-all/barcelona-fc/home/');
 	session_destroy();
+	exit();
 }
 add_shortcode('shortcode_logout', 'logout');
-
 function edit_profile_player(){
 	global $wpdb;
 	if($_SESSION['username'] == ""){
-	?>
-	<script>
-		window.location.href = '/wordpress-all/barcelona-fc/login/';
-	</script>
-	<?php
+		wp_redirect('/wordpress-all/barcelona-fc/login/');
+		exit();
 	}
 	$idplayer = get_id_player($_SESSION['username'], $_SESSION['password']);
 	$player = $wpdb->get_row("SELECT * FROM players WHERE id = '".$idplayer."'"); 
@@ -490,23 +526,17 @@ function edit_profile_player(){
 	echo '</p>';
 	echo '<p>';
 	echo '<input type="hidden" name="post_id" id="post_id" value="55" />';
-	echo 'Upload image: <input type="file" name="my_image_upload" id="my_image_upload" multiple="false" />';
-	wp_nonce_field( 'my_image_upload', 'my_image_upload_nonce' );
+	echo 'Upload image: <input type="file" name="my_image_upload" id="my_image_upload" multiple="false" />'; wp_nonce_field( 'my_image_upload', 'my_image_upload_nonce' );
 	echo '</p>';	
 	echo '<p><input type="submit" name="player-save" value="Save"></p>';
 	echo '</form>';
-
 }
 add_shortcode('shortcode_edit_profile_player', 'edit_profile_player');
-
 function change_password(){
 	global $wpdb;
 	if($_SESSION['username'] == ""){
-	?>
-	<script>
-		window.location.href = '/wordpress-all/barcelona-fc/login/';
-	</script>
-	<?php
+		wp_redirect('/wordpress-all/barcelona-fc/login/');
+		exit();
 	}
 	$id = $_SESSION['id'];
 	
@@ -556,4 +586,18 @@ function change_password(){
 	}
 }
 add_shortcode('shortcode_change_password','change_password');
-
+function status_player(){
+	global $wpdb;
+	$id = $_SESSION['id'];
+	$status = $wpdb->get_var("SELECT status FROM players WHERE id = '".$id."'");
+	if($status == "Rejected"){
+		echo "Sorry for the moment you can not join us. Thank you for your participation";
+	}
+	else if($status == "Accepted"){
+		echo "Congratulations you have successfully joined";
+	}
+	else if($status == "Accepted"){
+		echo "Please wait. Your status is '".$status."'";
+	}
+}
+add_shortcode('shortcode_status_player','status_player');
