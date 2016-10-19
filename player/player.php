@@ -8,7 +8,7 @@ Author: Henry
 include 'widget_top_score.php';
 include 'widget_assist.php';
 include 'widget_search.php';
-global $player_id;
+
 add_action( 'admin_menu', 'my_admin_menu' );
 function my_admin_menu() {
 	add_menu_page( 'Player', 'Player', 'manage_options', 'admin_player/admin_player_page.php', 'player_admin_page', 'dashicons-tickets', 6 );
