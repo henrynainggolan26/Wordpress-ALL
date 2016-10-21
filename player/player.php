@@ -13,10 +13,13 @@ add_action( 'admin_menu', 'my_admin_menu' );
 function my_admin_menu() {
 	add_menu_page( 'Player', 'Player', 'manage_options', 'admin_player/admin_player_page.php', 'player_admin_page', 'dashicons-tickets', 6 );
 }
+<<<<<<< HEAD:new/player/player.php
+=======
 function player_session(){
 		include_once 'start_session.php';
 }
 add_action('init', 'player_session');
+>>>>>>> 77f3bf84dff1a513868cc19d266fd86187e10b19:player/player.php
 function show_player(){
 	global $blog_id;
 	global $wpdb;
@@ -193,6 +196,18 @@ function randomPassword() {
     }
     return implode($pass); 
 }
+add_filter( 'wp_mail_content_type', 'set_content_type' );
+function set_content_type( $content_type ) {
+	return 'text/html';
+}
+function send_mail($email_player, $password){
+	$to = $email_player;
+	$subject = 'Thank you for your participation';
+	$body = 'You can login with username '.$email_player.' : and password : '.$password.'';
+	$headers[] = 'From: Henry Nainggolan <henrylumbanraja26@gmail.com>';
+	$headers[] = 'Cc: Nainggolan Henry <henry@softwareseni.com>';
+	wp_mail( $to, $subject, $message, $headers );
+}
 function insert_player(){
 	global $blog_id;
 	global $wpdb;
@@ -243,7 +258,7 @@ function insert_player(){
 				'%s',
 				)
 			); ;
-		
+		send_mail($email, $randPass);
 	}
 }
 add_shortcode( 'sitepoint_player_form', 'player_shortcode' );
@@ -322,11 +337,6 @@ function display_autocomplete(){
 			) );
 	}
 }
-/*function custom_excerpt_length( $length ) {
-    return 15;
-}
-add_filter( 'excerpt_length', 'custom_excerpt_length', 999 );*/
-
 add_filter('widget_text', 'do_shortcode');
 function show_player_all(){
 	global $blog_id;
@@ -369,9 +379,9 @@ function show_player_in(){
 }
 add_shortcode( 'shortcode_show_player_in', 'show_player_in' );
 
-function cek_login($username, $password){
+function cek_login($username, $password, $blog_id){
 	global $wpdb;
-	$result = $wpdb->get_results("SELECT username,password FROM players WHERE username = '".$username."' AND password = '".$password."'");
+	$result = $wpdb->get_results("SELECT username,password FROM players WHERE username = '".$username."' AND password = '".$password."' AND blog_id = '".$blog_id."'");
 	return $result;
 }
 function get_id_player($username, $password){
@@ -380,23 +390,38 @@ function get_id_player($username, $password){
 	$result = $temp_id;
 	return $result;	
 }
+function validasi_login_multisite(){
+	global $blog_id;
+	if($_COOKIE['blog_id'] != $blog_id){
+		wp_redirect(site_url('/login/'));
+		exit();
+	}
+}
 function login_player(){
-	player_session();
+	global $blog_id;
 	if(isset($_POST['login'])){
 		$username = sanitize_text_field($_POST['username']);
 		$password = sanitize_text_field($_POST['password']);
-		$query = cek_login($username,$password);
-		$id = get_id_player($username, $password); 
+		$blogid = get_current_blog_id();
+		$query = cek_login($username,$password, $blog_id);  
+		$id = get_id_player($username, $password);  
 		if (!$query) {
-			echo "Error: Data not found..";
-			$_SESSION['userLoggedIn'] = false;
+			echo "Error: Data not found.."; 
 		}
 		else{
+<<<<<<< HEAD:new/player/player.php
+			setcookie("username" , $username, time()+3600, '/');
+			setcookie("password" , $password, time()+3600, '/');
+			setcookie("blog_id" , $blogid, time()+3600, '/');
+			setcookie("id" , $id, time()+3600, '/');		
+			wp_redirect(home_url());
+=======
 			$_SESSION['username'] = $username;
 			$_SESSION['password'] = $password;
 			$_SESSION['id'] = $id;			
 			$_SESSION['userLoggedIn'] = true;
 			wp_redirect('/wordpress-all/barcelona-fc/home/');
+>>>>>>> 77f3bf84dff1a513868cc19d266fd86187e10b19:player/player.php
 			exit();
 		}
 	}
@@ -421,18 +446,35 @@ function login_player(){
 }
 add_shortcode( 'shortcode_login_player', 'login_player' );
 function logout(){
+<<<<<<< HEAD:new/player/player.php
+    setcookie('username', "", time()-3600, '/');
+    setcookie('password', "", time()-3600, '/');
+    setcookie('blog_id', "", time()-3600, '/');
+	setcookie('id', "", time()-3600, '/');
+    unset($_COOKIE['username']);
+    unset($_COOKIE['password']);
+    unset($_COOKIE['blog_id']);
+    unset($_COOKIE['id']);
+	wp_redirect(home_url(), 302);
+=======
 	wp_redirect('/wordpress-all/barcelona-fc/home/');
 	session_destroy();
+>>>>>>> 77f3bf84dff1a513868cc19d266fd86187e10b19:player/player.php
 	exit();
 }
 add_shortcode('shortcode_logout', 'logout');
 function edit_profile_player(){
 	global $wpdb;
+<<<<<<< HEAD:new/player/player.php
+	validasi_login_multisite();
+	$idplayer = get_id_player($_COOKIE['username'], $_COOKIE['password']);
+=======
 	if($_SESSION['username'] == ""){
 		wp_redirect('/wordpress-all/barcelona-fc/login/');
 		exit();
 	}
 	$idplayer = get_id_player($_SESSION['username'], $_SESSION['password']);
+>>>>>>> 77f3bf84dff1a513868cc19d266fd86187e10b19:player/player.php
 	$player = $wpdb->get_row("SELECT * FROM players WHERE id = '".$idplayer."'"); 
 	$name = $player->name;
 	$email = $player->email;
@@ -442,7 +484,7 @@ function edit_profile_player(){
 	$image = $player->image; 
     $temp_image = wp_get_attachment_image_src( $image, array('200', '200') );
     if(isset($_POST['player-save'])){ 
-		$id = get_id_player($_SESSION['username'], $_SESSION['password']);
+		$id = get_id_player($_COOKIE['username'], $_COOKIE['password']);
 		$name = sanitize_text_field($_POST["player-name"]);
 		$email = sanitize_text_field($_POST["player-email"]);
 		$username = sanitize_text_field($_POST["player-username"]);
@@ -530,16 +572,26 @@ function edit_profile_player(){
 	echo '</p>';	
 	echo '<p><input type="submit" name="player-save" value="Save"></p>';
 	echo '</form>';
+<<<<<<< HEAD:new/player/player.php
+	
+	
+=======
+>>>>>>> 77f3bf84dff1a513868cc19d266fd86187e10b19:player/player.php
 }
 add_shortcode('shortcode_edit_profile_player', 'edit_profile_player');
 function change_password(){
 	global $wpdb;
+<<<<<<< HEAD:new/player/player.php
+	validasi_login_multisite();
+	$id = $_COOKIE['id'];
+=======
 	if($_SESSION['username'] == ""){
 		wp_redirect('/wordpress-all/barcelona-fc/login/');
 		exit();
 	}
 	$id = $_SESSION['id'];
 	
+>>>>>>> 77f3bf84dff1a513868cc19d266fd86187e10b19:player/player.php
 	echo '<form id="change_pass" action="#" method="post" enctype="multipart/form-data">';
 	echo '<p>';
 	echo 'Old Password (required) <br/>';
@@ -588,7 +640,12 @@ function change_password(){
 add_shortcode('shortcode_change_password','change_password');
 function status_player(){
 	global $wpdb;
+<<<<<<< HEAD:new/player/player.php
+	validasi_login_multisite();
+	$id = $_COOKIE['id'];
+=======
 	$id = $_SESSION['id'];
+>>>>>>> 77f3bf84dff1a513868cc19d266fd86187e10b19:player/player.php
 	$status = $wpdb->get_var("SELECT status FROM players WHERE id = '".$id."'");
 	if($status == "Rejected"){
 		echo "Sorry for the moment you can not join us. Thank you for your participation";
